@@ -3,79 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lemonade to Legacy — Business Tycoon</title>
+<title>Lemonade to Legacy — Life &amp; Business Sim</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="app">
+<div id="shell">
 
-  <header id="topbar">
-    <div id="brand">
-      <span id="tierEmoji">🍋</span>
-      <div>
-        <h1 id="tierName">Lemonade Stand</h1>
-        <p id="tierProduct">Selling cups of lemonade</p>
-      </div>
+  <div id="onboarding">
+    <h1>Start Your Life</h1>
+    <p>You're 22, fresh out of college, with <strong>$50,000</strong> in student loans and <strong>$500</strong> to your name. Choose your degree — it shapes which jobs are open to you.</p>
+    <div class="degree-grid">
+      <button class="degree-card" data-action="choose-degree" data-degree="law">
+        <div class="degree-title">Law <span class="badge">Easy</span></div>
+        <p>Stable pay, a straightforward ladder. Paralegal to partner.</p>
+      </button>
+      <button class="degree-card" data-action="choose-degree" data-degree="finance">
+        <div class="degree-title">Finance <span class="badge">Medium</span></div>
+        <p>Decent pay, steady promotions if you put in the years.</p>
+      </button>
+      <button class="degree-card" data-action="choose-degree" data-degree="art">
+        <div class="degree-title">Art <span class="badge">Hard</span></div>
+        <p>Low, unstable pay early on — but the ceiling is high if you make it.</p>
+      </button>
     </div>
-    <div id="stats">
-      <div class="stat"><span class="label">Day</span><span class="value" id="dayValue">1</span></div>
-      <div class="stat"><span class="label">Cash</span><span class="value" id="cashValue">$0</span></div>
-      <div class="stat"><span class="label">Reputation</span><span class="value" id="repValue">50%</span></div>
-    </div>
-  </header>
-
-  <div id="upgradeBanner" class="hidden">
-    <span id="upgradeText"></span>
-    <button id="upgradeBtn">Upgrade Now</button>
   </div>
 
-  <main id="layout">
-
-    <section id="controlsPanel" class="panel">
-      <h2>Run Your Business</h2>
-
-      <div class="field">
-        <label for="priceInput">Price per unit <span class="hint" id="idealPriceHint"></span></label>
-        <input type="number" id="priceInput" min="0" step="0.01">
+  <div id="game" class="hidden">
+    <header id="topbar">
+      <div id="ageBlock">
+        <span id="ageValue">22y 0w</span>
+        <span id="weekValue" class="muted">Week 1</span>
       </div>
-
-      <div class="field">
-        <label for="buyQtyInput">Buy inventory <span class="hint" id="unitCostHint"></span></label>
-        <div class="inline">
-          <input type="number" id="buyQtyInput" min="0" step="1" value="0">
-          <button id="buyBtn">Buy</button>
-        </div>
-        <p class="hint">On hand: <span id="inventoryValue">0</span> units</p>
+      <div id="netWorthBlock">
+        <span class="label">Net Worth</span>
+        <span id="netWorthValue">$0.00</span>
       </div>
+      <button id="advanceBtn" data-action="advance-week">Advance Week ▶</button>
+    </header>
 
-      <div class="field">
-        <label for="marketingInput">Marketing spend today</label>
-        <input type="number" id="marketingInput" min="0" step="1" value="0">
-      </div>
+    <main id="tabContent">
+      <section id="tab-home" class="tab-panel"></section>
+      <section id="tab-job" class="tab-panel hidden"></section>
+      <section id="tab-business" class="tab-panel hidden"></section>
+      <section id="tab-banking" class="tab-panel hidden"></section>
+      <section id="tab-skills" class="tab-panel hidden"></section>
+      <section id="tab-life" class="tab-panel hidden"></section>
+    </main>
 
-      <div class="field">
-        <label>Staff <span class="hint" id="wageHint"></span></label>
-        <div class="inline">
-          <button id="fireBtn">– Fire</button>
-          <span id="employeeCount">0</span>
-          <button id="hireBtn">+ Hire</button>
-        </div>
-      </div>
+    <nav id="bottomNav">
+      <button data-action="switch-tab" data-tab="home" class="active"><span class="nav-icon">🏠</span>Home</button>
+      <button data-action="switch-tab" data-tab="job"><span class="nav-icon">💼</span>Job</button>
+      <button data-action="switch-tab" data-tab="business"><span class="nav-icon">🏪</span>Business</button>
+      <button data-action="switch-tab" data-tab="banking"><span class="nav-icon">🏦</span>Banking</button>
+      <button data-action="switch-tab" data-tab="skills"><span class="nav-icon">🎓</span>Skills</button>
+      <button data-action="switch-tab" data-tab="life"><span class="nav-icon">🧭</span>Life</button>
+    </nav>
+  </div>
 
-      <button id="runDayBtn" class="primary">Run Day ▶</button>
-      <button id="resetBtn" class="ghost">New Game</button>
-    </section>
-
-    <section id="infoPanel" class="panel">
-      <h2>Business Snapshot</h2>
-      <canvas id="cashChart" width="400" height="120"></canvas>
-      <ul id="snapshotList"></ul>
-
-      <h2>Day Log</h2>
-      <div id="log"></div>
-    </section>
-
-  </main>
 </div>
 
 <script src="script.js"></script>
