@@ -6,10 +6,16 @@
 const DEGREES = {
   law: { label: "Law", difficulty: "Easy", track: "law", skill: "networking",
     blurb: "Stable pay, a straightforward ladder. Paralegal to partner." },
+  nursing: { label: "Nursing", difficulty: "Easy", track: "nursing", skill: "clinical",
+    blurb: "In-demand and steady. CNA to nurse practitioner." },
   finance: { label: "Finance", difficulty: "Medium", track: "finance", skill: "management",
     blurb: "Decent pay, steady promotions if you put in the years." },
+  marketing: { label: "Marketing", difficulty: "Medium", track: "marketing", skill: "branding",
+    blurb: "Creative and business-minded, with real room to climb." },
   art: { label: "Art", difficulty: "Hard", track: "art", skill: "craft",
     blurb: "Low, unstable pay early on — but the ceiling is high if you make it." },
+  music: { label: "Music", difficulty: "Hard", track: "music", skill: "performance",
+    blurb: "Gigs barely pay at first — but a breakout act pays big." },
 };
 
 const JOB_TRACKS = {
@@ -18,15 +24,30 @@ const JOB_TRACKS = {
     { title: "Associate Attorney", weeklyPay: 1400, weeksReq: 26, skillReq: 30 },
     { title: "Law Firm Partner", weeklyPay: 3000, weeksReq: 52, skillReq: 65 },
   ],
+  nursing: [
+    { title: "Certified Nursing Assistant", weeklyPay: 650, weeksReq: 0, skillReq: 0 },
+    { title: "Registered Nurse", weeklyPay: 1300, weeksReq: 24, skillReq: 28 },
+    { title: "Nurse Practitioner", weeklyPay: 2600, weeksReq: 48, skillReq: 60 },
+  ],
   finance: [
     { title: "Bank Teller", weeklyPay: 500, weeksReq: 0, skillReq: 0 },
     { title: "Financial Analyst", weeklyPay: 900, weeksReq: 28, skillReq: 35 },
     { title: "Portfolio Manager", weeklyPay: 2200, weeksReq: 56, skillReq: 70 },
   ],
+  marketing: [
+    { title: "Marketing Assistant", weeklyPay: 480, weeksReq: 0, skillReq: 0 },
+    { title: "Marketing Manager", weeklyPay: 950, weeksReq: 30, skillReq: 38 },
+    { title: "Marketing Director", weeklyPay: 2100, weeksReq: 58, skillReq: 72 },
+  ],
   art: [
     { title: "Freelance Gigs", weeklyPay: 320, weeksReq: 0, skillReq: 0, variance: 0.45 },
     { title: "Studio Artist", weeklyPay: 650, weeksReq: 32, skillReq: 40, variance: 0.2 },
     { title: "Gallery-Represented Artist", weeklyPay: 1900, weeksReq: 60, skillReq: 75, variance: 0.15 },
+  ],
+  music: [
+    { title: "Gigging Musician", weeklyPay: 300, weeksReq: 0, skillReq: 0, variance: 0.5 },
+    { title: "Session Musician", weeklyPay: 620, weeksReq: 34, skillReq: 42, variance: 0.22 },
+    { title: "Touring Artist", weeklyPay: 2000, weeksReq: 62, skillReq: 78, variance: 0.12 },
   ],
 };
 
@@ -93,7 +114,7 @@ const BUSINESS_EVENTS = [
   { weight: 2, name: "Quiet week — nothing unusual.", factor: 1.0, rep: 0, silent: true },
 ];
 
-const SAVE_KEY = "lemonadeToLegacySaveV2";
+const SAVE_KEY = "lemonadeToLegacySaveV3";
 
 let state = null;
 
@@ -111,7 +132,7 @@ function defaultState() {
     creditScore: 650,
     job: null, // { levelIndex, weeksAtLevel }
     business: null, // { tier, inventory, price, marketing, employees, reputation }
-    skills: { networking: 0, management: 0, craft: 0 },
+    skills: { networking: 0, management: 0, craft: 0, clinical: 0, branding: 0, performance: 0 },
     housingTier: 0,
     weeksSinceLoanPayment: 0,
     log: [],
@@ -822,8 +843,11 @@ function renderBanking() {
 
 const SKILL_INFO = {
   networking: { label: "Networking", helps: "Law promotions" },
+  clinical: { label: "Clinical", helps: "Nursing promotions" },
   management: { label: "Management", helps: "Finance promotions & business" },
+  branding: { label: "Branding", helps: "Marketing promotions" },
   craft: { label: "Craft", helps: "Art promotions" },
+  performance: { label: "Performance", helps: "Music promotions" },
 };
 
 function renderSkills() {
@@ -970,10 +994,25 @@ function renderAll() {
   drawNetWorthChart();
 }
 
+// ---------- Status bar clock ----------
+
+function updateStatusTime() {
+  const el = document.getElementById("statusTime");
+  if (!el) return;
+  const now = new Date();
+  let h = now.getHours();
+  const m = now.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  el.textContent = `${h}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 // ---------- Wiring ----------
 
 function init() {
   load();
+  updateStatusTime();
+  setInterval(updateStatusTime, 30000);
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");

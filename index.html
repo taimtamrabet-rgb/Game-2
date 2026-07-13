@@ -2,64 +2,105 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Lemonade to Legacy — Life &amp; Business Sim</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="shell">
+<div id="phoneFrame">
+  <div id="notch"></div>
 
-  <div id="onboarding">
-    <h1>Start Your Life</h1>
-    <p>You're 22, fresh out of college, with <strong>$50,000</strong> in student loans and <strong>$500</strong> to your name. Choose your degree — it shapes which jobs are open to you.</p>
-    <div class="degree-grid">
-      <button class="degree-card" data-action="choose-degree" data-degree="law">
-        <div class="degree-title">Law <span class="badge">Easy</span></div>
-        <p>Stable pay, a straightforward ladder. Paralegal to partner.</p>
-      </button>
-      <button class="degree-card" data-action="choose-degree" data-degree="finance">
-        <div class="degree-title">Finance <span class="badge">Medium</span></div>
-        <p>Decent pay, steady promotions if you put in the years.</p>
-      </button>
-      <button class="degree-card" data-action="choose-degree" data-degree="art">
-        <div class="degree-title">Art <span class="badge">Hard</span></div>
-        <p>Low, unstable pay early on — but the ceiling is high if you make it.</p>
-      </button>
+  <div id="screen">
+    <div id="statusBar">
+      <span id="statusTime">9:41</span>
+      <div id="statusIcons">
+        <span class="signal-bars"><i></i><i></i><i></i><i></i></span>
+        <span class="wifi-icon"></span>
+        <span class="battery-icon"><span class="battery-fill"></span></span>
+      </div>
+    </div>
+
+    <div id="onboarding">
+      <h1>Start Your Life</h1>
+      <p>You're 22, fresh out of college, with <strong>$50,000</strong> in student loans and <strong>$500</strong> to your name. Choose your degree — it shapes which jobs are open to you.</p>
+
+      <div class="degree-grid">
+        <div class="degree-tier">
+          <div class="degree-tier-label">Easy</div>
+          <div class="degree-tier-cards">
+            <button class="degree-card" data-action="choose-degree" data-degree="law">
+              <div class="degree-title">Law</div>
+              <p>Paralegal to partner.</p>
+            </button>
+            <button class="degree-card" data-action="choose-degree" data-degree="nursing">
+              <div class="degree-title">Nursing</div>
+              <p>CNA to nurse practitioner.</p>
+            </button>
+          </div>
+        </div>
+        <div class="degree-tier">
+          <div class="degree-tier-label">Medium</div>
+          <div class="degree-tier-cards">
+            <button class="degree-card" data-action="choose-degree" data-degree="finance">
+              <div class="degree-title">Finance</div>
+              <p>Teller to portfolio manager.</p>
+            </button>
+            <button class="degree-card" data-action="choose-degree" data-degree="marketing">
+              <div class="degree-title">Marketing</div>
+              <p>Assistant to director.</p>
+            </button>
+          </div>
+        </div>
+        <div class="degree-tier">
+          <div class="degree-tier-label">Hard</div>
+          <div class="degree-tier-cards">
+            <button class="degree-card" data-action="choose-degree" data-degree="art">
+              <div class="degree-title">Art</div>
+              <p>Freelance to gallery-represented.</p>
+            </button>
+            <button class="degree-card" data-action="choose-degree" data-degree="music">
+              <div class="degree-title">Music</div>
+              <p>Gigging to touring artist.</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="game" class="hidden">
+      <header id="topbar">
+        <div id="ageBlock">
+          <span id="ageValue">22y 0w</span>
+          <span id="weekValue" class="muted">Week 1</span>
+        </div>
+        <div id="netWorthBlock">
+          <span class="label">Net Worth</span>
+          <span id="netWorthValue">$0.00</span>
+        </div>
+        <button id="advanceBtn" data-action="advance-week">Advance Week ▶</button>
+      </header>
+
+      <main id="tabContent">
+        <section id="tab-home" class="tab-panel"></section>
+        <section id="tab-job" class="tab-panel hidden"></section>
+        <section id="tab-business" class="tab-panel hidden"></section>
+        <section id="tab-banking" class="tab-panel hidden"></section>
+        <section id="tab-skills" class="tab-panel hidden"></section>
+        <section id="tab-life" class="tab-panel hidden"></section>
+      </main>
+
+      <nav id="bottomNav">
+        <button data-action="switch-tab" data-tab="home" class="active"><span class="nav-icon">🏠</span>Home</button>
+        <button data-action="switch-tab" data-tab="job"><span class="nav-icon">💼</span>Job</button>
+        <button data-action="switch-tab" data-tab="business"><span class="nav-icon">🏪</span>Business</button>
+        <button data-action="switch-tab" data-tab="banking"><span class="nav-icon">🏦</span>Banking</button>
+        <button data-action="switch-tab" data-tab="skills"><span class="nav-icon">🎓</span>Skills</button>
+        <button data-action="switch-tab" data-tab="life"><span class="nav-icon">🧭</span>Life</button>
+      </nav>
     </div>
   </div>
 
-  <div id="game" class="hidden">
-    <header id="topbar">
-      <div id="ageBlock">
-        <span id="ageValue">22y 0w</span>
-        <span id="weekValue" class="muted">Week 1</span>
-      </div>
-      <div id="netWorthBlock">
-        <span class="label">Net Worth</span>
-        <span id="netWorthValue">$0.00</span>
-      </div>
-      <button id="advanceBtn" data-action="advance-week">Advance Week ▶</button>
-    </header>
-
-    <main id="tabContent">
-      <section id="tab-home" class="tab-panel"></section>
-      <section id="tab-job" class="tab-panel hidden"></section>
-      <section id="tab-business" class="tab-panel hidden"></section>
-      <section id="tab-banking" class="tab-panel hidden"></section>
-      <section id="tab-skills" class="tab-panel hidden"></section>
-      <section id="tab-life" class="tab-panel hidden"></section>
-    </main>
-
-    <nav id="bottomNav">
-      <button data-action="switch-tab" data-tab="home" class="active"><span class="nav-icon">🏠</span>Home</button>
-      <button data-action="switch-tab" data-tab="job"><span class="nav-icon">💼</span>Job</button>
-      <button data-action="switch-tab" data-tab="business"><span class="nav-icon">🏪</span>Business</button>
-      <button data-action="switch-tab" data-tab="banking"><span class="nav-icon">🏦</span>Banking</button>
-      <button data-action="switch-tab" data-tab="skills"><span class="nav-icon">🎓</span>Skills</button>
-      <button data-action="switch-tab" data-tab="life"><span class="nav-icon">🧭</span>Life</button>
-    </nav>
-  </div>
-
+  <div id="homeIndicator"></div>
 </div>
 
 <script src="script.js"></script>
