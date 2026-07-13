@@ -338,25 +338,73 @@ function resetGame() {
 function drawChart() {
   const canvas = document.getElementById("cashChart");
   const ctx = canvas.getContext("2d");
-  const w = canvas.width;
-  const h = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || canvas.width;
+  const cssH = canvas.clientHeight || canvas.height;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const w = cssW;
+  const h = cssH;
+  const padL = 6, padR = 6, padT = 10, padB = 10;
   ctx.clearRect(0, 0, w, h);
 
-  const data = state.history.length ? state.history : [state.cash];
+  const styles = getComputedStyle(document.documentElement);
+  const ruleColor = styles.getPropertyValue("--rule").trim();
+  const profitColor = styles.getPropertyValue("--profit").trim();
+  const lossColor = styles.getPropertyValue("--loss").trim();
+
+  const data = state.history.length >= 2 ? state.history : [state.cash, state.cash];
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
+  const lineColor = data[data.length - 1] >= data[0] ? profitColor : lossColor;
 
-  ctx.strokeStyle = "#2f9e5b";
-  ctx.lineWidth = 2;
+  const xAt = (i) => padL + (i / (data.length - 1)) * (w - padL - padR);
+  const yAt = (v) => h - padB - ((v - min) / range) * (h - padT - padB);
+
+  // faint horizontal grid
+  ctx.strokeStyle = ruleColor;
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= 2; g++) {
+    const y = padT + (g / 2) * (h - padT - padB);
+    ctx.beginPath();
+    ctx.moveTo(padL, Math.round(y) + 0.5);
+    ctx.lineTo(w - padR, Math.round(y) + 0.5);
+    ctx.stroke();
+  }
+
+  // area fill under the line
+  ctx.beginPath();
+  ctx.moveTo(xAt(0), yAt(data[0]));
+  data.forEach((v, i) => ctx.lineTo(xAt(i), yAt(v)));
+  ctx.lineTo(xAt(data.length - 1), h - padB);
+  ctx.lineTo(xAt(0), h - padB);
+  ctx.closePath();
+  ctx.fillStyle = lineColor + "22";
+  ctx.fill();
+
+  // line
   ctx.beginPath();
   data.forEach((v, i) => {
-    const x = (i / Math.max(1, data.length - 1)) * (w - 10) + 5;
-    const y = h - 10 - ((v - min) / range) * (h - 20);
+    const x = xAt(i);
+    const y = yAt(v);
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
   ctx.stroke();
+
+  // emphasized endpoint
+  const lastX = xAt(data.length - 1);
+  const lastY = yAt(data[data.length - 1]);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
 }
 
 function render() {
@@ -408,7 +456,7 @@ function render() {
       const msg = e.messages.length ? `<div class="event">${e.messages.join(" · ")}</div>` : "";
       return `<div class="log-entry ${cls}">
         <div class="log-head"><span>Day ${e.day}</span><span>${e.profit >= 0 ? "+" : ""}${fmtMoney(e.profit)}</span></div>
-        <div>Sold ${e.unitsSold} units · Revenue ${fmtMoney(e.revenue)} · Operating costs ${fmtMoney(e.totalCosts)}</div>
+        <div class="details">Sold ${e.unitsSold} units · Revenue ${fmtMoney(e.revenue)} · Operating costs ${fmtMoney(e.totalCosts)}</div>
         ${msg}
       </div>`;
     })
