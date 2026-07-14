@@ -114,9 +114,11 @@ const BUSINESS_EVENTS = [
   { weight: 2, name: "Quiet week — nothing unusual.", factor: 1.0, rep: 0, silent: true },
 ];
 
-const SAVE_KEY = "lemonadeToLegacySaveV3";
+const SAVE_KEY = "lemonadeToLegacySaveV4";
 
 let state = null;
+let selectedWeekForChart = null; // UI-only, not persisted
+let chartGeom = null; // UI-only, set by drawNetWorthChart for hover math
 
 // ---------- State ----------
 
@@ -599,7 +601,7 @@ function advanceWeek() {
   const report = { week: state.week, income, expenses, netChange, notes };
   state.log.unshift(report);
   state.log = state.log.slice(0, 30);
-  state.history.push(netWorth());
+  state.history.push({ week: state.week, value: netWorth() });
   state.history = state.history.slice(-60);
 
   save();
@@ -652,7 +654,8 @@ function renderHome() {
     `;
   }
 
-  const history = state.log.slice(1, 8);
+  const firstWeek = state.history.length ? state.history[0].week : state.week;
+  const lastWeek = state.history.length ? state.history[state.history.length - 1].week : state.week;
 
   return `
     <div class="card summary-card">
@@ -662,14 +665,61 @@ function renderHome() {
       <div class="row"><span>Student Loan</span><span class="neg">${fmtMoney(state.studentLoan.balance)}</span></div>
       ${state.businessLoan ? `<div class="row"><span>Business Loan</span><span class="neg">${fmtMoney(state.businessLoan.balance)}</span></div>` : ""}
     </div>
-    <canvas id="netWorthChart" width="400" height="120"></canvas>
+    <div class="card">
+      <div class="card-header">Net Worth Trend</div>
+      <canvas id="netWorthChart" width="400" height="140"></canvas>
+      ${state.history.length > 1 ? `<div class="chart-axis-labels"><span>Week ${firstWeek}</span><span>Week ${lastWeek}</span></div>` : ""}
+    </div>
     ${reportHtml}
-    ${history.length ? `
-      <div class="card">
-        <div class="card-header">Previous Weeks</div>
-        ${history.map((r) => `<div class="row"><span>Week ${r.week}</span><span class="${r.netChange >= 0 ? "pos" : "neg"}">${fmtSigned(r.netChange)}</span></div>`).join("")}
-      </div>` : ""}
+    ${renderIncomeExpenseChart()}
     <button class="ghost" data-action="reset-game">Start a New Life</button>
+  `;
+}
+
+function renderIncomeExpenseChart() {
+  const weeks = state.log.slice(0, 8).slice().reverse().map((r) => ({
+    week: r.week,
+    income: r.income.reduce((s, l) => s + l.amount, 0),
+    expense: r.expenses.reduce((s, l) => s + l.amount, 0),
+  }));
+
+  if (!weeks.length) return "";
+
+  if (selectedWeekForChart === null || !weeks.some((w) => w.week === selectedWeekForChart)) {
+    selectedWeekForChart = weeks[weeks.length - 1].week;
+  }
+
+  const maxVal = Math.max(1, ...weeks.flatMap((w) => [w.income, w.expense]));
+  const BAR_MAX_PX = 60;
+
+  const cols = weeks.map((w) => {
+    const incomeH = Math.round((w.income / maxVal) * BAR_MAX_PX);
+    const expenseH = Math.round((w.expense / maxVal) * BAR_MAX_PX);
+    const selected = w.week === selectedWeekForChart;
+    return `
+      <button class="diverging-col${selected ? " selected" : ""}" data-action="select-week" data-week="${w.week}" aria-label="Week ${w.week}">
+        <div class="diverging-top"><div class="diverging-bar income-bar" style="height:${incomeH}px"></div></div>
+        <div class="diverging-baseline"></div>
+        <div class="diverging-bottom"><div class="diverging-bar expense-bar" style="height:${expenseH}px"></div></div>
+        <span class="diverging-label">${w.week}</span>
+      </button>
+    `;
+  }).join("");
+
+  const sel = weeks.find((w) => w.week === selectedWeekForChart);
+
+  return `
+    <div class="card">
+      <div class="card-header">
+        <span>Income vs Expenses</span>
+        <span class="chart-legend">
+          <span class="legend-item"><i class="legend-dot income-dot"></i>Income</span>
+          <span class="legend-item"><i class="legend-dot expense-dot"></i>Expense</span>
+        </span>
+      </div>
+      <div class="diverging-chart">${cols}</div>
+      <p class="chart-caption">Week ${sel.week} — Income <span class="pos">${fmtMoney(sel.income)}</span> · Expense <span class="neg">${fmtMoney(sel.expense)}</span></p>
+    </div>
   `;
 }
 
@@ -894,7 +944,7 @@ function renderLife() {
   `;
 }
 
-function drawNetWorthChart() {
+function drawNetWorthChart(hoverIndex) {
   const canvas = document.getElementById("netWorthChart");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -906,15 +956,18 @@ function drawNetWorthChart() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const w = cssW, h = cssH;
-  const padL = 6, padR = 6, padT = 10, padB = 10;
+  const padL = 6, padR = 6, padT = 14, padB = 10;
   ctx.clearRect(0, 0, w, h);
 
   const styles = getComputedStyle(document.documentElement);
   const ruleColor = styles.getPropertyValue("--rule").trim();
   const incomeColor = styles.getPropertyValue("--income").trim();
   const expenseColor = styles.getPropertyValue("--expense").trim();
+  const cardColor = styles.getPropertyValue("--card").trim();
+  const inkColor = styles.getPropertyValue("--ink").trim();
 
-  const data = state.history.length >= 2 ? state.history : [netWorth(), netWorth()];
+  const raw = state.history.length >= 2 ? state.history : [{ week: state.week, value: netWorth() }, { week: state.week, value: netWorth() }];
+  const data = raw.map((d) => d.value);
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -922,6 +975,8 @@ function drawNetWorthChart() {
 
   const xAt = (i) => padL + (i / (data.length - 1)) * (w - padL - padR);
   const yAt = (v) => h - padB - ((v - min) / range) * (h - padT - padB);
+
+  chartGeom = { data: raw, xAt, yAt, w, h, padL, padR };
 
   ctx.strokeStyle = ruleColor;
   ctx.lineWidth = 1;
@@ -953,12 +1008,72 @@ function drawNetWorthChart() {
   ctx.lineJoin = "round";
   ctx.stroke();
 
-  const lastX = xAt(data.length - 1);
-  const lastY = yAt(data[data.length - 1]);
+  const emphasisIndex = hoverIndex != null ? hoverIndex : data.length - 1;
+  const ex = xAt(emphasisIndex);
+  const ey = yAt(data[emphasisIndex]);
+
+  if (hoverIndex != null) {
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = ruleColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ex, padT);
+    ctx.lineTo(ex, h - padB);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   ctx.beginPath();
-  ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+  ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
   ctx.fillStyle = lineColor;
   ctx.fill();
+
+  if (hoverIndex != null) {
+    const label = `Wk ${raw[emphasisIndex].week}: ${fmtMoney(data[emphasisIndex])}`;
+    ctx.font = "600 11px " + getComputedStyle(canvas).fontFamily;
+    const textW = ctx.measureText(label).width;
+    const boxW = textW + 14;
+    const boxH = 20;
+    let boxX = ex - boxW / 2;
+    boxX = clamp(boxX, 2, w - boxW - 2);
+    const boxY = 2;
+    ctx.fillStyle = cardColor;
+    ctx.strokeStyle = ruleColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = inkColor;
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, boxX + 7, boxY + boxH / 2 + 1);
+  }
+}
+
+function wireNetWorthChartHover() {
+  const canvas = document.getElementById("netWorthChart");
+  if (!canvas) return;
+
+  const nearestIndex = (clientX) => {
+    if (!chartGeom) return null;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const { data, padL, padR, w } = chartGeom;
+    const t = clamp((x - padL) / (w - padL - padR), 0, 1);
+    return Math.round(t * (data.length - 1));
+  };
+
+  const onMove = (clientX) => {
+    const idx = nearestIndex(clientX);
+    if (idx != null) drawNetWorthChart(idx);
+  };
+
+  canvas.addEventListener("mousemove", (e) => onMove(e.clientX));
+  canvas.addEventListener("mouseleave", () => drawNetWorthChart());
+  canvas.addEventListener("touchstart", (e) => onMove(e.touches[0].clientX), { passive: true });
+  canvas.addEventListener("touchmove", (e) => onMove(e.touches[0].clientX), { passive: true });
+  canvas.addEventListener("touchend", () => drawNetWorthChart());
 }
 
 function renderAll() {
@@ -992,6 +1107,7 @@ function renderAll() {
   });
 
   drawNetWorthChart();
+  wireNetWorthChartHover();
 }
 
 // ---------- Status bar clock ----------
@@ -1075,6 +1191,10 @@ function init() {
         break;
       case "reset-game":
         resetGame();
+        break;
+      case "select-week":
+        selectedWeekForChart = parseInt(btn.dataset.week, 10);
+        renderAll();
         break;
     }
   });

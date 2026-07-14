@@ -26,8 +26,8 @@
     --ink: #eef0f4;
     --muted: #8b93a1;
     --rule: #2a2e38;
-    --income: #35c777;
-    --expense: #ef6d5e;
+    --income: #28a061;
+    --expense: #dc5f4a;
     --accent: #e8a33d;
     --accent-ink: #1a1204;
   }
@@ -345,10 +345,90 @@ body {
   color: var(--ink);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 .card-header.income-header { color: var(--income); }
 .card-header.expense-header { color: var(--expense); }
+
+/* ---------- Chart legend & axis labels ---------- */
+.chart-legend {
+  display: flex;
+  gap: 10px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.income-dot { background: var(--income); }
+.expense-dot { background: var(--expense); }
+
+.chart-axis-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: var(--muted);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+#netWorthChart { cursor: crosshair; width: 100%; height: 140px; display: block; }
+
+/* ---------- Diverging income/expense bar chart ---------- */
+.diverging-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+  padding-top: 4px;
+}
+.diverging-col {
+  flex: 1;
+  min-width: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 4px 2px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: var(--font-ui);
+}
+.diverging-col:hover { background: var(--card-2); }
+.diverging-col.selected { background: var(--card-2); box-shadow: inset 0 0 0 1px var(--accent); }
+.diverging-top {
+  height: 64px;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.diverging-bottom {
+  height: 64px;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.diverging-bar { width: 10px; min-height: 2px; }
+.income-bar { background: var(--income); border-radius: 4px 4px 0 0; }
+.expense-bar { background: var(--expense); border-radius: 0 0 4px 4px; }
+.diverging-baseline { width: 100%; height: 1px; background: var(--rule); flex-shrink: 0; }
+.diverging-label {
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+}
+.chart-caption {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
 
 .row {
   display: flex;
@@ -460,12 +540,3 @@ button.ghost:hover { color: var(--ink); }
   border-radius: 5px;
 }
 
-/* ---------- Chart ---------- */
-#netWorthChart {
-  width: 100%;
-  height: 120px;
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  display: block;
-}
